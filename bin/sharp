@@ -3,7 +3,6 @@
 if ARGV[0] == "console"
   $:.unshift(File.expand_path("lib", Dir.pwd))
   require 'boot'
-  Sharp.boot
   require 'irb'
   ARGV.clear
   IRB.start(Sharp.root)

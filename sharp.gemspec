@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |gem|
   gem.name          = "sharp"
-  gem.version       = "0.0.1"
+  gem.version       = "0.0.2"
   gem.authors       = ["Paul Barry"]
   gem.email         = ["mail@paulbarry.com"]
   gem.description   = %q{A web framework}
