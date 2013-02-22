@@ -1,0 +1,3 @@
+# Sharp
+
+A web framework that ties together rack-router, rack-action, and eventually other gems.  It's a work in progress.  More to come...
