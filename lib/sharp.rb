@@ -36,12 +36,12 @@ module Sharp
       if @booted
         false
       else
-        pre_boot
+        pre_initialization
         load_lib
         load_models
         load_actions
         load_routes
-        post_boot
+        post_initialization
         finish_boot
       end
     end
@@ -91,8 +91,8 @@ module Sharp
     end
 
     protected
-    def pre_boot
-      # A hook for plugins to add boot logic
+    def pre_initialization
+      Dir.glob(root.join("app/preinitializers/*.rb")) {|file| load file }
       db # TODO: Pull out Sequel-specific code
     end
 
@@ -117,8 +117,8 @@ module Sharp
       require File.expand_path "app/routes", root
     end
 
-    def post_boot
-      # A hook for plugins to add boot logic
+    def post_initialization
+      Dir.glob(root.join("app/initializers/*.rb")) {|file| load file }
     end
 
     def finish_boot
