@@ -22,13 +22,14 @@ module Sharp
   class Application
     attr_reader :root, :router
 
-    def initialize(root)
-      @root = Pathname.new(root)
+    def self.boot(root)
+      app = new(root)
+      app.boot
+      app
     end
 
-    # TODO: Log to a file, command-line option for STDOUT
-    def logger
-      @logger ||= Logger.new(STDOUT)
+    def initialize(root)
+      @root = Pathname.new(root)
     end
 
     def boot
@@ -36,6 +37,7 @@ module Sharp
         false
       else
         pre_boot
+        load_lib
         load_models
         load_actions
         load_routes
@@ -50,6 +52,27 @@ module Sharp
 
     def env
       @env ||= ENV['RACK_ENV'].present? ? ENV['RACK_ENV'].to_sym : :development
+    end
+
+    # TODO: Log to a file, command-line option for STDOUT
+    def logger
+      @logger ||= begin
+        logger = Logger.new(STDOUT)
+        logger.formatter = logger_formatter
+        logger
+      end
+    end
+
+    def logger_formatter
+      @logger_formatter ||= proc do |severity, datetime, progname, msg|
+        color = case severity
+        when "ERROR" then '0;31'
+        when "WARN" then '1;33'
+        when "DEBUG" then '0;32'
+        else '1;37'
+        end
+        "\e[#{ color }m#{datetime} #{msg}\e[0;0m\n"
+      end
     end
 
     #TODO: Pull out Sequel-specific code
@@ -74,19 +97,24 @@ module Sharp
     end
 
     # TODO: Make an Array of load paths that you can add to that these are just part of
+    def load_lib
+      $:.unshift(root.join("app/lib"))
+      Dir.glob(root.join("app/lib/*.rb")) {|file| require file }
+    end
+
     def load_models
-      $:.unshift(root.join("lib/models"))
-      Dir.glob(root.join("lib/models/*.rb")) {|file| require file }
+      $:.unshift(root.join("app/models"))
+      Dir.glob(root.join("app/models/*.rb")) {|file| require file }
     end
 
     def load_actions
       Rack::Action.logger = logger
-      $:.unshift(root.join("lib/actions"))
-      Dir.glob(root.join("lib/actions/*.rb")) {|file| require file }
+      $:.unshift(root.join("app/actions"))
+      Dir.glob(root.join("app/actions/*.rb")) {|file| require file }
     end
 
     def load_routes
-      require "routes"
+      require File.expand_path "app/routes", root
     end
 
     def post_boot

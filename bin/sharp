@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 
 if ARGV[0] == "console"
-  $:.unshift(File.expand_path("lib", Dir.pwd))
-  require 'boot'
+  require File.expand_path('app/boot', Dir.pwd)
   require 'irb'
   ARGV.clear
   IRB.start(Sharp.root)
