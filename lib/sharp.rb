@@ -1,4 +1,5 @@
 require "sharp/version"
+require "fileutils"
 require "logger"
 require "pathname"
 require "rack-action"
@@ -54,10 +55,18 @@ module Sharp
       @env ||= ENV['RACK_ENV'].present? ? ENV['RACK_ENV'].to_sym : :development
     end
 
-    # TODO: Log to a file, command-line option for STDOUT
     def logger
       @logger ||= begin
-        logger = Logger.new(STDOUT)
+        logger = if ENV['SHARP_LOGGER'].to_s.downcase == 'stdout'
+          Logger.new(STDOUT)
+        else
+          log_dir = root.join("log")
+          unless File.exists?(log_dir)
+            FileUtils.mkdir(log_dir)
+          end
+          Logger.new(File.join(log_dir, "#{env}.log"))
+        end
+
         logger.formatter = logger_formatter
         logger
       end
