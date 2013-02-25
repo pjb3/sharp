@@ -75,25 +75,13 @@ module Sharp
       end
     end
 
-    #TODO: Pull out Sequel-specific code
     def db
-      @db ||= begin
-        db_config.inject({}) do |acc, (key, value)|
-          acc[key] = Sequel.connect(value.merge(:logger => logger))
-          Sequel::Model.db = acc[key] if key == :default
-          acc
-        end
-      end
-    end
-
-    def db_config
-      @db_config ||= YAML.load_file(root.join("config/database.yml")).symbolize_keys[env].symbolize_keys
+      @db ||= YAML.load_file(root.join("config/database.yml")).symbolize_keys[env].symbolize_keys
     end
 
     protected
     def pre_initialization
       Dir.glob(root.join("app/preinitializers/*.rb")) {|file| load file }
-      db # TODO: Pull out Sequel-specific code
     end
 
     # TODO: Make an Array of load paths that you can add to that these are just part of
