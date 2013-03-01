@@ -38,6 +38,7 @@ module Sharp
         false
       else
         pre_initialization
+        load_i18n
         load_lib
         load_models
         load_actions
@@ -91,6 +92,14 @@ module Sharp
     protected
     def pre_initialization
       Dir.glob(root.join("app/preinitializers/*.rb")) {|file| load file }
+    end
+
+    def load_i18n
+      if Object.const_defined?("I18n")
+        Dir.glob(root.join("config/locales/*.yml")) do |file|
+          I18n.load_path << file
+        end
+      end
     end
 
     # TODO: Make an Array of load paths that you can add to that these are just part of
