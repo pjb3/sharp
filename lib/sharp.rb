@@ -10,7 +10,7 @@ module Sharp
 
   class << self
     attr_reader :app
-    delegate :logger, :boot, :root, :router, :env, :db, :to => :app
+    delegate :logger, :boot, :root, :router, :env, :db, :route, :get, :post, :put, :delete, :head, :to => :app
     delegate :routes, :to => :router
   end
 
@@ -27,6 +27,13 @@ module Sharp
       app = new(root)
       app.boot
       app
+    end
+
+    # Generates a Rack env Hash
+    def self.env(method, path, env={})
+      env.merge(
+        'REQUEST_METHOD' => method.to_s.upcase,
+        'PATH_INFO' => path)
     end
 
     def initialize(root)
@@ -50,6 +57,30 @@ module Sharp
 
     def router
       @router ||= Rack::Router.new
+    end
+
+    def route(method, path, env={})
+      router.match(self.class.env(method, path, env={}))
+    end
+
+    def get(path, env={})
+      router.call(self.class.env(:get, path, env={}))
+    end
+
+    def post(path, env={})
+      router.call(self.class.env(:post, path, env={}))
+    end
+
+    def put(path, env={})
+      router.call(self.class.env(:put, path, env={}))
+    end
+
+    def delete(path, env={})
+      router.call(self.class.env(:delete, path, env={}))
+    end
+
+    def head(path, env={})
+      router.call(self.class.env(:head, path, env={}))
     end
 
     def env
