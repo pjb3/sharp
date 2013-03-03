@@ -36,6 +36,11 @@ module Sharp
         'PATH_INFO' => path)
     end
 
+    # Generate a new application
+    def self.generate(name)
+
+    end
+
     def initialize(root)
       @root = Pathname.new(root)
     end
