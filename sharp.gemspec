@@ -15,6 +15,7 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_runtime_dependency "activesupport"
+  gem.add_runtime_dependency "curtain"
   gem.add_runtime_dependency "rack-router"
   gem.add_runtime_dependency "rack-action"
 end

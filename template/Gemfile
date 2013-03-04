@@ -1,0 +1,10 @@
+source "http://rubygems.org"
+
+gem "curtain", :require => "curtain/erubis"
+gem "erubis"
+gem "sharp", :path => ".."
+gem "temple"
+
+group :development do
+  gem "shotgun"
+end

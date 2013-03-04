@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require 'sharp'
+
 case ARGV[0]
 when "console"
   require File.expand_path('app/boot', Dir.pwd)
@@ -7,7 +9,7 @@ when "console"
   ARGV.clear
   IRB.start(Sharp.root)
 when "new"
-  Sharp::Application.generate(ARGV[0])
+  Sharp.generate(ARGV[1])
 else
   $stderr.puts "Unknown command"
   exit 1

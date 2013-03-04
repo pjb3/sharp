@@ -1,10 +1,14 @@
-require "sharp/version"
-require "fileutils"
-require "logger"
-require "pathname"
-require "rack-action"
-require "rack-router"
-require "yaml"
+require 'active_support/core_ext'
+require 'fileutils'
+require 'logger'
+require 'pathname'
+require 'rack-action'
+require 'rack-router'
+require 'yaml'
+require 'sharp/action'
+require 'sharp/view'
+require 'sharp/generator'
+require 'sharp/version'
 
 module Sharp
 
@@ -18,6 +22,10 @@ module Sharp
     @app = Application.new(root)
     @app.boot
     @app
+  end
+
+  def self.generate(name)
+    Sharp::Generator.new(name).generate
   end
 
   class Application
@@ -34,11 +42,6 @@ module Sharp
       env.merge(
         'REQUEST_METHOD' => method.to_s.upcase,
         'PATH_INFO' => path)
-    end
-
-    # Generate a new application
-    def self.generate(name)
-
     end
 
     def initialize(root)
