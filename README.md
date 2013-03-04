@@ -10,7 +10,7 @@ The only prerequisite for Sharp is Ruby 1.9 or higher.  Once you have that insta
 
 ## Usage
 
-For a basic walkthrough of all the features, view the [tutorial](docs/file/TUTORIAL.md)
+For a basic walkthrough of all the features, read the [tutorial](TUTORIAL.md).
 
 ## Contributing
 
@@ -19,4 +19,3 @@ For a basic walkthrough of all the features, view the [tutorial](docs/file/TUTOR
 3. Commit your changes (`git commit -am 'Added some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
->>>>>>> Working on the new app generator
