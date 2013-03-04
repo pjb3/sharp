@@ -2,7 +2,7 @@ source "http://rubygems.org"
 
 gem "curtain", :require => "curtain/erubis"
 gem "erubis"
-gem "sharp", :path => ".."
+gem "sharp"
 gem "temple"
 
 group :development do
