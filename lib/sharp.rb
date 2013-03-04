@@ -6,6 +6,7 @@ require 'rack-action'
 require 'rack-router'
 require 'yaml'
 require 'sharp/action'
+require 'sharp/config'
 require 'sharp/view'
 require 'sharp/generator'
 require 'sharp/version'
@@ -14,7 +15,7 @@ module Sharp
 
   class << self
     attr_reader :app
-    delegate :logger, :boot, :root, :router, :env, :db, :route, :get, :post, :put, :delete, :head, :to => :app
+    delegate :logger, :boot, :root, :router, :env, :config, :route, :get, :post, :put, :delete, :head, :to => :app
     delegate :routes, :to => :router
   end
 
@@ -126,13 +127,13 @@ module Sharp
       end
     end
 
-    def db
-      @db ||= YAML.load_file(root.join("config/database.yml")).symbolize_keys[env].symbolize_keys
+    def config
+      @config ||= Sharp::Config.new(env, Dir[root.join("config/*.yml")])
     end
 
     protected
     def pre_initialization
-      Dir.glob(root.join("app/preinitializers/*.rb")) {|file| load file }
+      Dir.glob(root.join("app/initializers/pre/*.rb")) {|file| load file }
     end
 
     def load_i18n
@@ -165,7 +166,7 @@ module Sharp
     end
 
     def post_initialization
-      Dir.glob(root.join("app/initializers/*.rb")) {|file| load file }
+      Dir.glob(root.join("app/initializers/post/*.rb")) {|file| load file }
     end
 
     def finish_boot

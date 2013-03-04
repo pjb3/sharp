@@ -1,11 +1,3 @@
-# Introduction
-
-To start building your first Sharp app, you need to have Ruby 1.9 or higher installed.  Once you do, you can install Sharp using rubygems by running the following command:
-
-    $ gem install sharp
-
-Next we'll create your first app.
-
 # Creating Your First App
 
 Sharp comes with an application generator built in to help you get started.  To create a sharp app, simply run the following command:
@@ -48,7 +40,6 @@ The directories and files created in the `hello_world` directory are as follows:
 	│   └── assets/
 	│       ├── javascripts/
 	│       └── stylesheets/
-	├── .gitignore
 	├── Gemfile
 	├── Guardfile
 	├── Rakefile
