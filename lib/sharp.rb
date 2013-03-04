@@ -25,7 +25,9 @@ module Sharp
   end
 
   def self.generate(name)
-    Sharp::Generator.new(name).generate
+    generator = Sharp::Generator.new(name)
+    generator.generate
+    puts "New sharp application created at #{generator.output_dir}"
   end
 
   class Application
