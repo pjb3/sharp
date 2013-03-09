@@ -5,6 +5,7 @@ require 'pathname'
 require 'rack-action'
 require 'rack-router'
 require 'stringio'
+require 'uri'
 require 'yaml'
 require 'sharp/action'
 require 'sharp/config'
@@ -74,11 +75,12 @@ module Sharp
     end
 
     # Generates a Rack env Hash
-    def self.env(method, path, query={}, env={})
+    def self.env(method, path, env={})
+      uri = URI.parse(path)
       DEFAULT_ENV.merge(env || {}).merge(
         'REQUEST_METHOD' => method.to_s.upcase,
-        'PATH_INFO' => path,
-        'QUERY_STRING' => query.to_param,
+        'PATH_INFO' => uri.path,
+        'QUERY_STRING' => uri.query,
         'rack.input' => StringIO.new)
     end
 
