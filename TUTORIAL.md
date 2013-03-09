@@ -124,8 +124,6 @@ end
 
 Huh, not much going on there, is there?  That's because the default behavior of an action is to render the template that matches the name of the action.  In this case, the action is `app/actions/root_action.rb`, so the template will be `templates/root.erb`.  We'll cover actions in more depth later, but let's take a look at the template next.
 
-But in case you are curious now, Sharp actions are [Rack::Action][rack-action], so you can read up on the documentation for [Rack::Action][rack-action] to find out more about what you can do with actions.
-
 # Templates
 
 There is what the template that is used to generate our response, `templates/root.erb`, looks like:
@@ -246,6 +244,8 @@ end
 
 In this example, unless there is a param password equal to "secret", a redirect response will be generate, which prevents the action from calling the respond method and instead returns the redirect response.
 
+Each Sharp action is an instance of `Rack::Action`, so you can read the documentation for [rack-action][rack-action] to find out more about what you can do with actions.
+
 # Custom Views
 
 Another way to make data available to the templates in Sharp is by creating a view object that corresponds to your action.  Create a file at `app/views/root_view.rb` that looks like this:
@@ -267,7 +267,7 @@ end
 
 If you hit the root URL in your browser or with curl now, you will see the same result.  It is a good practice to build up a hierarchy of view objects and use inheritance to share functionality between related views. 
 
-The functionality for the view layer in Sharp is provided by [Curtain][curtain].  If you are looking for more information on what you can do with views, take a look at the documentation for [Curtain][curtain].
+Each Sharp view is an instance of `Curtain::View`, so you read the documentation on [Curtain][curtain] to find out more about what you can do with views.
 
 # Console
 
