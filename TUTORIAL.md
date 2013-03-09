@@ -73,21 +73,26 @@ Contains 3rd party CSS and JS you are using in your application.  You typically 
 
 # Starting the Server
 
-Now that you have a Sharp application, you can start up the server and see your first web page!  To start the server, run this command from within the `hello_world` directory:
+Now that you have a Sharp application, you can start up the server and see your first web page!  Sharp uses [Bundler][bundler] by default, so to get rolling, make sure you have bundler installed and run bundler:
+
+    $ bundle
+
+To start the server, run this command from within the `hello_world` directory:
 
     $ shotgun
 
 This will start the application on port 9393.  You can see what the homepage looks like by running this command:
 
-	$ curl http://localhost:9393
-	<html>
-	  <head>
-	    <title>Hello, World!</title>
-	  </head>
-	  <body>
-	    <h1>Hello, World!</h1>
-	  </body>
-	</html>
+    $ curl -s http://localhost:9393
+    <!doctype html>
+    <html>
+      <head>
+        <title>Hello, World!</title>
+      </head>
+      <body>
+        <h1>Hello, World!</h1>
+      </body>
+    </html>
 
 You can, of course, also look at this page in your browser:
 
@@ -101,7 +106,7 @@ When your application receives a request, the first thing that happens is the ro
 
 ``` ruby
 Sharp.routes do
-  get "/" => RootAction
+  get '/' => RootAction
 end
 ```
 
@@ -122,31 +127,35 @@ Huh, not much going on there, is there?  That's because the default behavior of 
 
 There is what the template that is used to generate our response, `templates/root.erb`, looks like:
 
-    <h1>Hello, World!</h1>
+``` erb
+<h1>Hello, World!</h1>
+```
 
-There's nut much to it yet.  In fact, this is just a static snippet of HTML.  Templates typically have Ruby code mixed in with the HTML, in order to generate a dynamic response.  So why don't you go ahead and make a change to see what that looks like.  Edit `templates/root.erb` to look like this:
+There's not much to it yet.  In fact, this is just a static snippet of HTML.  Templates typically have Ruby code mixed in with the HTML, in order to generate a dynamic response.  So why don't you go ahead and make a change to see what that looks like.  Edit `templates/root.erb` to look like this:
 
-    <h1>Hello, World</h1>
-    <footer>
-      &copy; Copyright <%= Time.now.year %>
-    </footer>
+``` erb
+<h1>Hello, World</h1>
+<footer>
+  &copy; Copyright <%= Time.now.year -%>
+</footer>
+```
 
 If you make a request to your application now, you'll see this:
 
-	$ curl http://localhost:9393
-	<html>
-	  <head>
-	    <title>Hello, World!</title>
-	  </head>
-	  <body>
-	    <h1>Hello, World!</h1>
-	    <footer>
-	      &copy; Copyright 2013
-	    </footer>
-	  </body>
-	</html>
+  	$ curl -s http://localhost:9393
+  	<html>
+  	  <head>
+  	    <title>Hello, World!</title>
+  	  </head>
+  	  <body>
+  	    <h1>Hello, World!</h1>
+  	    <footer>
+  	      &copy; Copyright 2013
+  	    </footer>
+  	  </body>
+  	</html>
 
-As you can see, the Ruby code contained between the `<%= %>` was evaluated and the result what the current year, which was included into the response.  
+As you can see, the Ruby code contained between the `<%= -%>` was evaluated and the result what the current year, which was included into the response.  
 
 One thing to notice is that you didn't have to restart your application, the changes were picked up automatically.  This is because we used `shotgun` to start the application, which handles automatically reloading the application between requests for us.
 
@@ -154,7 +163,26 @@ One question you may be asking is where did the `<html>`, `<head>` and `<body>` 
 
 # Layouts
 
-In many web application, the same `<head>` and basic structure within the `<body>` is shared among many different pages.  Layouts allow you to define that structure in one place and share it between multiple actions.
+In many web application, the same `<head>` and basic structure within the `<body>` is shared among many different pages.  Layouts allow you to define that structure in one place and share it between multiple actions.  The layout your application is currently using is at `templates/layouts/application.erb`:
+
+``` erb  
+<!doctype html>
+<html>
+  <head>
+    <title>Hello, World!</title>
+  </head>
+  <body>
+    <%= render main -%>
+  </body>
+</html>  
+```
+
+The tag `<%= render main -%>` is used to specify where the main content for the view should go.  In fact, `render` is a generic method that you can use render any template from within another.  `main` is a local variable that has the name of the template for the current view, which is `"root"` in this case.
+
+# More To Come
+
+Sharp is still in the early stages of development, so keep checking back for updates on how to do more advanced things with Sharp.  
 
 [jquery]: http://jquery.com
 [bootstrap]: http://twitter.github.com/bootstrap
+[bundler]: http://gembundler.com

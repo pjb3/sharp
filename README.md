@@ -1,6 +1,6 @@
 # Sharp
 
-Sharp is a Ruby and Rack-based web framework.
+Sharp is a [Ruby][ruby] and [Rack][rack]-based web framework.
 
 ## Installation
 
@@ -19,3 +19,6 @@ For a basic walkthrough of all the features, read the [tutorial](TUTORIAL.md).
 3. Commit your changes (`git commit -am 'Added some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+[ruby]: http://www.ruby-lang.org
+[rack]: http://rack.github.com
