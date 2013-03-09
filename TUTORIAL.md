@@ -28,7 +28,6 @@ The directories and files created in the `hello_world` directory are as follows:
 	│   ├── stylesheets/
 	│   └── packages.yml
 	├── config/
-	│   └── database.yml
 	├── public/
 	│   ├── favicon.ico
 	│   └── robots.txt

@@ -27,15 +27,15 @@ module Sharp
 
     def configs
       {
-        :database => %w[development test production].inject({}) do |cfg, env|
-          cfg[env] = {
-            'adapter' => 'mysql2',
-            'database' => "#{@name}_#{env}",
-            'host' => 'localhost',
-            'user' => 'root'
-          }
-          cfg
-        end
+        #:database => %w[development test production].inject({}) do |cfg, env|
+          #cfg[env] = {
+            #'adapter' => 'mysql2',
+            #'database' => "#{@name}_#{env}",
+            #'host' => 'localhost',
+            #'user' => 'root'
+          #}
+          #cfg
+        #end
       }
     end
   end
