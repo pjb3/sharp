@@ -4,6 +4,7 @@ require 'logger'
 require 'pathname'
 require 'rack-action'
 require 'rack-router'
+require 'stringio'
 require 'yaml'
 require 'sharp/action'
 require 'sharp/config'
@@ -12,7 +13,6 @@ require 'sharp/generator'
 require 'sharp/version'
 
 module Sharp
-
   class << self
     attr_reader :app
     delegate :logger, :boot, :root, :router, :env, :config, :route, :get, :post, :put, :delete, :head, :to => :app
@@ -32,19 +32,24 @@ module Sharp
   end
 
   class Application
+    DEFAULT_ENV = {
+      "SCRIPT_NAME" => "",
+      "SERVER_NAME" => "localhost",
+      "SERVER_PORT" => "80",
+      "HTTP_HOST" => "localhost",
+      "HTTP_ACCEPT" => "*/*",
+      "HTTP_USER_AGENT" => "Sharp #{VERSION}",
+      "rack.input" => StringIO.new,
+      "rack.errors" => StringIO.new,
+      "rack.url_scheme" => "http"
+    }.freeze
+
     attr_reader :root, :router
 
     def self.boot(root)
       app = new(root)
       app.boot
       app
-    end
-
-    # Generates a Rack env Hash
-    def self.env(method, path, env={})
-      env.merge(
-        'REQUEST_METHOD' => method.to_s.upcase,
-        'PATH_INFO' => path)
     end
 
     def initialize(root)
@@ -57,9 +62,7 @@ module Sharp
       else
         pre_initialization
         load_i18n
-        load_lib
-        load_models
-        load_actions
+        load_load_path
         load_routes
         post_initialization
         finish_boot
@@ -68,6 +71,15 @@ module Sharp
 
     def router
       @router ||= Rack::Router.new
+    end
+
+    # Generates a Rack env Hash
+    def self.env(method, path, query={}, env={})
+      DEFAULT_ENV.merge(env || {}).merge(
+        'REQUEST_METHOD' => method.to_s.upcase,
+        'PATH_INFO' => path,
+        'QUERY_STRING' => query.to_param,
+        'rack.input' => StringIO.new)
     end
 
     def route(method, path, env={})
@@ -131,7 +143,12 @@ module Sharp
       @config ||= Sharp::Config.new(env, Dir[root.join("config/*.yml")])
     end
 
+    def load_path
+      @load_path ||= %w[app/lib app/models app/actions app/views]
+    end
+
     protected
+
     def pre_initialization
       Dir.glob(root.join("app/initializers/pre/*.rb")) {|file| load file }
     end
@@ -144,21 +161,11 @@ module Sharp
       end
     end
 
-    # TODO: Make an Array of load paths that you can add to that these are just part of
-    def load_lib
-      $:.unshift(root.join("app/lib"))
-      Dir.glob(root.join("app/lib/*.rb")) {|file| require file }
-    end
-
-    def load_models
-      $:.unshift(root.join("app/models"))
-      Dir.glob(root.join("app/models/*.rb")) {|file| require file }
-    end
-
-    def load_actions
-      Rack::Action.logger = logger
-      $:.unshift(root.join("app/actions"))
-      Dir.glob(root.join("app/actions/*.rb")) {|file| require file }
+    def load_load_path
+      load_path.each do |path|
+        $:.unshift(root.join(path))
+        Dir.glob(root.join("#{path}/*.rb")) {|file| require file }
+      end
     end
 
     def load_routes
@@ -172,6 +179,5 @@ module Sharp
     def finish_boot
       @booted = true
     end
-
   end
 end
