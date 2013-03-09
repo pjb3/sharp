@@ -111,6 +111,8 @@ end
 
 What this means is if the request is a `GET` and the path is just `/`, call the `RootAction` to generate the response.  We'll go into routing in more detail later, but for now, let's take a look at what the `RootAction` does.
 
+The Sharp router is a [Rack::Router][rack-router], so for more information on how the router works, take a look at the docs for [Rack::Router][rack-router].
+
 # Actions
 
 So as we've seen, the router determines what action should respond to a request, and it is the job of an action to generate the response.  If we look at the `RootAction`, which is defined in `app/actions/root_action.rb`, we see this:
@@ -121,6 +123,8 @@ end
 ```
 
 Huh, not much going on there, is there?  That's because the default behavior of an action is to render the template that matches the name of the action.  In this case, the action is `app/actions/root_action.rb`, so the template will be `templates/root.erb`.  We'll cover actions in more depth later, but let's take a look at the template next.
+
+But in case you are curious now, Sharp actions are [Rack::Action][rack-action], so you can read up on the documentation for [Rack::Action][rack-action] to find out more about what you can do with actions.
 
 # Templates
 
@@ -156,7 +160,7 @@ If you make a request to your application now, you'll see this:
 
 As you can see, the Ruby code contained between the `<%= -%>` was evaluated and the result what the current year, which was included into the response.  
 
-One thing to notice is that you didn't have to restart your application, the changes were picked up automatically.  This is because we used `shotgun` to start the application, which handles automatically reloading the application between requests for us.
+One thing to notice is that you didn't have to restart your application, the changes were picked up automatically.  This is because we used [shotgun][shotgun] to start the application, which handles automatically reloading the application between requests for us.
 
 One question you may be asking is where did the `<html>`, `<head>` and `<body>` tags come from? `templates/root.erb` just contains the snippet that ends up in the `<body>`.  The answer is layouts, which is the topic we'll introduce next.
 
@@ -178,6 +182,111 @@ In many web application, the same `<head>` and basic structure within the `<body
 
 The tag `<%= render main -%>` is used to specify where the main content for the view should go.  In fact, `render` is a generic method that you can use render any template from within another.  `main` is a local variable that has the name of the template for the current view, which is `"root"` in this case.
 
+# Views
+
+In your application, you will most likely want to prepare some data in the action and make it available for rendering in the template.  Taking our previous example of dynamically generating the year in the template, let's move the "logic" of generating that into the action.  Edit `app/actions/root_action.rb` to look like this:
+
+``` ruby
+class RootAction < ApplicationAction
+  def respond
+    @now = Time.now
+    view[:current_year] = @now.year
+    super
+  end
+end
+```
+
+Now we can modify the template to refer to it like this:
+
+``` erb
+<h1>Hello, World</h1>
+<footer>
+  &copy; Copyright <%= current_year -%>
+</footer>
+```
+
+Instance variables of the action are not accessible in the template, so the following would not work:
+
+``` erb
+<h1>Hello, World</h1>
+<footer>
+  &copy; Copyright <%= @now.year -%>
+</footer>
+```
+
+If you have data that you want available in the template, you must assign to the view, as we did with `current_year` in this example.
+
+# Filters
+
+Sharp actions support before filters, which are methods that execute before the `response` method.  Using before filters, we could write the previous example like this:
+
+``` ruby
+class RootAction < ApplicationAction
+  before_filter :load_year
+  
+  def load_year
+    view[:current_year] = Time.now.year
+  end
+end
+```
+
+More common usage of before filter is to check for some pre-existing conditions and possibly render a response if they are not met:
+
+``` ruby
+class RootAction < ApplicationAction
+  before_filter :require_password
+  
+  def require_password
+    unless params[:password] == 'secret'
+      redirect_to '/access_denied'
+    end
+  end
+end
+```
+
+In this example, unless there is a param password equal to "secret", a redirect response will be generate, which prevents the action from calling the respond method and instead returns the redirect response.
+
+# Custom Views
+
+Another way to make data available to the templates in Sharp is by creating a view object that corresponds to your action.  Create a file at `app/views/root_view.rb` that looks like this:
+
+``` ruby
+class RootView < ApplicationView
+  def current_year
+    Time.now.year
+  end
+end
+```
+
+You can now return the `RootAction` to it's original default state:
+
+``` ruby
+class RootAction < ApplicationAction
+end
+```
+
+If you hit the root URL in your browser or with curl now, you will see the same result.  It is a good practice to build up a hierarchy of view objects and use inheritance to share functionality between related views. 
+
+The functionality for the view layer in Sharp is provided by [Curtain][curtain].  If you are looking for more information on what you can do with views, take a look at the documentation for [Curtain][curtain].
+
+# Console
+
+You can get an IRB console with your sharp application loaded by running this command:
+
+    $ sharp console
+    
+From within the console, there are a few methods to help you work with your Sharp application.  First, if you would like to see what action a request would route to, you can do this:
+
+    > Sharp.route :get, '/'
+     => RootAction
+
+In this example, `:get` is the request method and `'/'` is the path you want to check.  As you can see, it returns the rack app that the route matches.  It returns nil if there is no match.
+
+You can also call an action through the route and get the rack response that it generates:
+
+    > Sharp.get '/'
+     => [200, {"Content-Type"=>"text/html", "Content-Length"=>"171"}, #<Rack::BodyProxy...
+
 # More To Come
 
 Sharp is still in the early stages of development, so keep checking back for updates on how to do more advanced things with Sharp.  
@@ -185,3 +294,7 @@ Sharp is still in the early stages of development, so keep checking back for upd
 [jquery]: http://jquery.com
 [bootstrap]: http://twitter.github.com/bootstrap
 [bundler]: http://gembundler.com
+[rack-router]: https://github.com/pjb3/rack-router#usage
+[rack-action]: https://github.com/pjb3/rack-action#usage
+[curtain]: https://github.com/pjb3/curtain#usage
+[shotgun]: https://github.com/rtomayko/shotgun
