@@ -10,7 +10,7 @@ The only prerequisite for Sharp is Ruby 1.9 or higher.  Once you have that insta
 
 ## Usage
 
-For a basic walkthrough of all the features, read the [tutorial](TUTORIAL.md).
+For a basic walkthrough of all the features, read the [tutorial][tutorial].
 
 ## Contributing
 
@@ -22,3 +22,4 @@ For a basic walkthrough of all the features, read the [tutorial](TUTORIAL.md).
 
 [ruby]: http://www.ruby-lang.org
 [rack]: http://rack.github.com
+[tutorial]: https://github.com/pjb3/sharp/blob/master/TUTORIAL.md#creating-your-first-app
