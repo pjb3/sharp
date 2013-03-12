@@ -166,7 +166,7 @@ module Sharp
     def load_load_path
       load_path.each do |path|
         $:.unshift(root.join(path))
-        Dir.glob(root.join("#{path}/*.rb")) {|file| require file }
+        Dir.glob(root.join("#{path}/**/*.rb")) {|file| require file }
       end
     end
 
