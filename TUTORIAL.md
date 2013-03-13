@@ -66,7 +66,7 @@ Contains the static files that will be served be the web server.
 
 Contains the templates used to generate HTML.  The default templating language is ERB, but Haml, Slim, Liquid, Mustache and other various templating languages can be used as well.
 
-## vender
+## vendor
 
 Contains 3rd party CSS and JS you are using in your application.  You typically don't modify these files, you import them from another project, such as [jQuery][jquery] or [Twitter Bootstrap][bootstrap].
 
