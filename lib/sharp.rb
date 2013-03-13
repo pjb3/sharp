@@ -114,7 +114,7 @@ module Sharp
 
     def logger
       @logger ||= begin
-        logger = if ENV['SHARP_LOGGER'].to_s.downcase == 'stdout'
+        logger = if env == :development || ENV['SHARP_LOGGER'].to_s.downcase == 'stdout'
           Logger.new(STDOUT)
         else
           log_dir = root.join("log")
@@ -152,6 +152,7 @@ module Sharp
     protected
 
     def pre_initialization
+      Rack::Action.logger = logger
       Dir.glob(root.join("app/initializers/pre/*.rb")) {|file| load file }
     end
 
