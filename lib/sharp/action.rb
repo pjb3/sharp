@@ -21,7 +21,11 @@ module Sharp
       if defined? @view_class
         @view_class
       else
-        @view_class = Object.const_defined?(view_name) ? view_name.constantize : Sharp::View
+        @view_class = begin
+          view_name.constantize
+        rescue NameError
+          Sharp::View
+        end
       end
     end
 

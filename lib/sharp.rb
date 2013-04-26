@@ -16,7 +16,7 @@ require 'sharp/version'
 module Sharp
   class << self
     attr_reader :app
-    delegate :logger, :boot, :root, :router, :env, :config, :route, :get, :post, :put, :delete, :head, :to => :app
+    delegate :logger, :logger=, :boot, :root, :router, :env, :config, :route, :get, :post, :put, :delete, :head, :to => :app
     delegate :routes, :to => :router
   end
 
@@ -114,7 +114,7 @@ module Sharp
 
     def logger
       @logger ||= begin
-        logger = if env == :development || ENV['SHARP_LOGGER'].to_s.downcase == 'stdout'
+        logger = if ENV['SHARP_LOGGER'].to_s.downcase == 'stdout'
           Logger.new(STDOUT)
         else
           log_dir = root.join("log")
@@ -129,15 +129,24 @@ module Sharp
       end
     end
 
+    def objects_logger_is_attached_to
+      @objects_logger_is_attached_to ||= [self]
+    end
+
+    def attach_logger(obj)
+      objects_logger_is_attached_to << obj
+      obj.logger = logger
+    end
+
+    def logger=(logger)
+      objects_logger_is_attached_to.each do |object|
+        object.logger = logger
+      end
+    end
+
     def logger_formatter
       @logger_formatter ||= proc do |severity, datetime, progname, msg|
-        color = case severity
-        when "ERROR" then '0;31'
-        when "WARN" then '1;33'
-        when "DEBUG" then '0;32'
-        else '1;37'
-        end
-        "\e[#{ color }m#{datetime} #{msg}\e[0;0m\n"
+        "#{datetime} #{severity} #{msg}\n"
       end
     end
 
@@ -152,7 +161,7 @@ module Sharp
     protected
 
     def pre_initialization
-      Rack::Action.logger = logger
+      attach_logger(Rack::Action)
       Dir.glob(root.join("app/initializers/pre/*.rb")) {|file| load file }
     end
 
