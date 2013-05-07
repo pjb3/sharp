@@ -4,6 +4,7 @@ require 'sharp'
 
 case ARGV[0]
 when "console"
+  ENV['SHARP_COMMAND'] ||= 'console'
   require File.expand_path('app/boot', Dir.pwd)
   require 'irb'
   ARGV.clear

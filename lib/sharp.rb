@@ -12,11 +12,13 @@ require 'sharp/config'
 require 'sharp/view'
 require 'sharp/generator'
 require 'sharp/version'
+require 'sharp/logging'
+require 'sharp/rack'
 
 module Sharp
   class << self
     attr_reader :app
-    delegate :logger, :logger=, :boot, :root, :router, :env, :config, :route, :get, :post, :put, :delete, :head, :to => :app
+    delegate :logger, :logger=, :boot, :root, :router, :env, :command, :config, :route, :get, :post, :put, :delete, :head, :to => :app
     delegate :routes, :to => :router
   end
 
@@ -33,34 +35,18 @@ module Sharp
   end
 
   class Application
-    DEFAULT_ENV = {
-      "SCRIPT_NAME" => "",
-      "SERVER_NAME" => "localhost",
-      "SERVER_PORT" => "80",
-      "HTTP_HOST" => "localhost",
-      "HTTP_ACCEPT" => "*/*",
-      "HTTP_USER_AGENT" => "Sharp #{VERSION}",
-      "rack.input" => StringIO.new,
-      "rack.errors" => StringIO.new,
-      "rack.url_scheme" => "http"
-    }.freeze
+    include Logging
+    include Rack
 
-    attr_reader :root, :router
-
-    def self.boot(root)
-      app = new(root)
-      app.boot
-      app
-    end
+    attr_reader :root
 
     def initialize(root)
       @root = Pathname.new(root)
     end
 
     def boot
-      if @booted
-        false
-      else
+      unless booted?
+        logger.info "Booting Sharp #{VERSION} #{env} #{command}..."
         pre_initialization
         load_i18n
         load_load_path
@@ -68,85 +54,31 @@ module Sharp
         post_initialization
         finish_boot
       end
+      self
     end
 
-    def router
-      @router ||= Rack::Router.new
-    end
-
-    # Generates a Rack env Hash
-    def self.env(method, path, env={})
-      uri = URI.parse(path)
-      DEFAULT_ENV.merge(env || {}).merge(
-        'REQUEST_METHOD' => method.to_s.upcase,
-        'PATH_INFO' => uri.path,
-        'QUERY_STRING' => uri.query,
-        'rack.input' => StringIO.new)
-    end
-
-    def route(method, path, env={})
-      router.match(self.class.env(method, path, env={}))
-    end
-
-    def get(path, env={})
-      router.call(self.class.env(:get, path, env={}))
-    end
-
-    def post(path, env={})
-      router.call(self.class.env(:post, path, env={}))
-    end
-
-    def put(path, env={})
-      router.call(self.class.env(:put, path, env={}))
-    end
-
-    def delete(path, env={})
-      router.call(self.class.env(:delete, path, env={}))
-    end
-
-    def head(path, env={})
-      router.call(self.class.env(:head, path, env={}))
-    end
-
+    # This represents which environment is being used.
+    # This is controlled via the RACK_ENV environment variable.
+    #
+    # @return [Symbol] The environment
     def env
       @env ||= ENV['RACK_ENV'].present? ? ENV['RACK_ENV'].to_sym : :development
     end
 
-    def logger
-      @logger ||= begin
-        logger = if ENV['SHARP_LOGGER'].to_s.downcase == 'stdout'
-          Logger.new(STDOUT)
-        else
-          log_dir = root.join("log")
-          unless File.exists?(log_dir)
-            FileUtils.mkdir(log_dir)
-          end
-          Logger.new(File.join(log_dir, "#{env}.log"))
-        end
-
-        logger.formatter = logger_formatter
-        logger
-      end
-    end
-
-    def objects_logger_is_attached_to
-      @objects_logger_is_attached_to ||= [self]
-    end
-
-    def attach_logger(obj)
-      objects_logger_is_attached_to << obj
-      obj.logger = logger
-    end
-
-    def logger=(logger)
-      objects_logger_is_attached_to.each do |object|
-        object.logger = logger
-      end
-    end
-
-    def logger_formatter
-      @logger_formatter ||= proc do |severity, datetime, progname, msg|
-        "#{datetime} #{severity} #{msg}\n"
+    # The command represents what external command is running Sharp. Typical values are:
+    #
+    # * *server* - A rack server like WEBrick, Thin, Unicorn, Puma, etc.
+    # * *console* - An IRB session
+    #
+    # If Sharp is just being run in a script or something, this will be nil.
+    # You can set this to any value you like using the SHARP_COMMAND environment variable.
+    #
+    # @return [Symbol|nil] The command running sharp
+    def command
+      if defined? @command
+        @command
+      else
+        @command = ENV['SHARP_COMMAND'].downcase.to_sym if ENV['SHARP_COMMAND'].present?
       end
     end
 
@@ -161,11 +93,15 @@ module Sharp
     protected
 
     def pre_initialization
-      attach_logger(Rack::Action)
-      Dir.glob(root.join("app/initializers/pre/*.rb")) {|file| load file }
+      attach_logger(::Rack::Action)
+      Dir.glob(root.join("app/initializers/pre/*.rb")) do |file|
+        logger.info "Loading pre-initializer #{File.expand_path(file)}..."
+        load file
+      end
     end
 
     def load_i18n
+      logger.info "Loading i18n..."
       if Object.const_defined?("I18n")
         Dir.glob(root.join("config/locales/*.yml")) do |file|
           I18n.load_path << file
@@ -176,20 +112,31 @@ module Sharp
     def load_load_path
       load_path.each do |path|
         $:.unshift(root.join(path))
-        Dir.glob(root.join("#{path}/**/*.rb")) {|file| require file }
+        Dir.glob(root.join("#{path}/**/*.rb")) do |file|
+          logger.info "Requiring #{file}..."
+          require file
+        end
       end
     end
 
     def load_routes
+      logger.info "Loading routes..."
       require File.expand_path "app/routes", root
     end
 
     def post_initialization
-      Dir.glob(root.join("app/initializers/post/*.rb")) {|file| load file }
+      Dir.glob(root.join("app/initializers/post/*.rb")) do |file|
+        logger.info "Loading post-initializer #{File.expand_path(file)}..."
+        load file
+      end
     end
 
     def finish_boot
       @booted = true
+    end
+
+    def booted?
+      !!@booted
     end
   end
 end
