@@ -47,12 +47,15 @@ module Sharp
     def boot
       unless booted?
         logger.info "Booting Sharp #{VERSION} #{env} #{command}..."
-        pre_initialization
-        load_i18n
-        load_load_path
-        load_routes
-        post_initialization
-        finish_boot
+        ms = Benchmark.ms do
+          pre_initialization
+          load_i18n
+          load_load_path
+          load_routes
+          post_initialization
+          finish_boot
+        end
+        logger.info("Booted in %0.1fms" % ms)
       end
       self
     end
@@ -95,39 +98,45 @@ module Sharp
     def pre_initialization
       attach_logger(::Rack::Action)
       Dir.glob(root.join("app/initializers/pre/*.rb")) do |file|
-        logger.info "Loading pre-initializer #{File.expand_path(file)}..."
-        load file
+        ms = Benchmark.ms { load file }
+        logger.info("Loaded pre-initializer #{file.sub(/^#{root}\/+/,'')} in %0.1fms" % ms)
       end
     end
 
     def load_i18n
-      logger.info "Loading i18n..."
-      if Object.const_defined?("I18n")
-        Dir.glob(root.join("config/locales/*.yml")) do |file|
-          I18n.load_path << file
+      ms = Benchmark.ms do
+        if Object.const_defined?("I18n")
+          Dir.glob(root.join("config/locales/*.yml")) do |file|
+            I18n.load_path << file
+          end
         end
       end
+      logger.info("Loaded i18n in %0.1fms" % ms)
     end
 
     def load_load_path
       load_path.each do |path|
         $:.unshift(root.join(path))
-        Dir.glob(root.join("#{path}/**/*.rb")) do |file|
-          logger.info "Requiring #{file}..."
-          require file
+        n = 0
+        ms = Benchmark.ms do
+          Dir.glob(root.join("#{path}/**/*.rb")) do |file|
+            require file
+            n += 1
+          end
         end
+        logger.info("Required #{n} #{"file".pluralize(n)} in #{path} in %0.1fms" % ms)
       end
     end
 
     def load_routes
-      logger.info "Loading routes..."
-      require File.expand_path "app/routes", root
+      ms = Benchmark.ms { require File.expand_path "app/routes", root }
+      logger.info("Loaded #{router.routes.size} #{"routes".pluralize(router.routes.size)} in %0.1fms" % ms)
     end
 
     def post_initialization
       Dir.glob(root.join("app/initializers/post/*.rb")) do |file|
-        logger.info "Loading post-initializer #{File.expand_path(file)}..."
-        load file
+        ms = Benchmark.ms { load file }
+        logger.info("Loaded post-initializer #{file.sub(/^#{root}\/+/,'')} in %0.1fms" % ms)
       end
     end
 
